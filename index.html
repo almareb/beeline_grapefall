@@ -1,20 +1,325 @@
-<!DOCTYPE html>
+
 <html>
-<head>
-	<meta charset="utf-8">
-	<meta name="description" content="Index page">
-  	<meta name="keywords" content="HTML, CSS, JavaScript">
-  	<meta name="author" content="Alma Reb">
-	<script src="script.js"></script>
-	<link rel="stylesheet" type="text/css" href="css/reset.css">
-	<link rel="stylesheet" type="text/css" href="css/fonts.css">
-	<link rel="stylesheet" type="text/css" href="css/style.css">
-
-	<title>GrapeFall</title>
-</head>
-<body>
-
-    
-	<script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.1.9/p5.min.js" integrity="sha512-WIklPM6qPCIp6d3fSSr90j+1unQHUOoWDS4sdTiR8gxUTnyZ8S2Mr8e10sKKJ/bhJgpAa/qG068RDkg6fIlNFA==" crossorigin="anonymous"></script>
-</body>
-</html>
+	<head>
+	<title>Write the Code!</title>
+	
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
+	
+	<script type="text/javascript" src="https://static.codehs.com/gulp/a1b7841c47f8fe4c8af9ea90b373c5749c81be75/chs-js-lib/chs.js"></script>
+	
+	
+	<style>
+	canvas {
+		border: 1px solid black;
+		display: inline-block;
+		vertical-align: top;
+	}
+	
+	pre {
+		border: 1px solid black;
+		display: inline-block;
+		width: 400px;
+		height: 500px;
+		background-color: #F5F5F5;
+	}
+	</style>
+	
+	</head>
+	
+	<body>
+	<h1>Write the Code!</h1>
+	
+	
+	
+	<canvas
+	width="400"
+	height="500"
+	class="codehs-editor-canvas"></canvas>
+	<pre id="console"></pre>
+	
+	<script>
+	window.onload = function() {
+	
+		var zakoWidth = 70;
+	var zakoHeight = 70;
+	var zako, church, zakoNorth, zakoSouth, zakoEast, zakoWest,
+		score, bee,lose,txt,bg;
+	var food = [];
+	var trash = [];
+	var beelineArr = ['ბ','ი','ლ','ა','ი','ნ','ი'];
+	var beelineCounter = 0;
+	
+	//zako moves
+	var hasten = 0;
+	
+	var churchWidth = 60;
+	var churchHeight = 60;
+	var churchNum = 5;
+	
+	var delay = 40;
+	var a;
+	var ch;
+	var counter =0;
+	var j= 0;
+	var counterG =4;
+	var counterJ = 3;
+	var counterScore = 0;
+	
+	var stop = true;
+	
+	
+	
+	
+	function start(){
+		
+	   /*txt = new Text('Click To Play','70px Rubik Light');
+		txt.setPosition(getWidth()/2-txt.getWidth()/2,getHeight()/2);
+		txt.setColor(Color.red);
+		add(txt);*/
+		
+		
+		drawZako();
+		
+		//create multiple churchkhelas
+		drawChurchkhela(3,0);
+		createTrash();
+		beeline(0);
+		scoreBoard();
+		
+		setTimer(draw, delay);
+		
+		keyDownMethod(keyDown);
+		//mouseClickMethod(clicked);  
+	
+		
+		
+	}
+	
+	function clicked(){
+		if(stop == false){
+			setTimer(draw, delay);
+			stop = true;
+			hasten = 0;
+			remove(txt);
+		} else{
+			stopTimer(draw);
+			stop = false;
+			hasten =-5;
+			add(txt);
+		}
+	}
+	function drawChurchkhela(g,j){
+		for (var i = j; i < g ; i++) {
+			
+			//churchkhelas
+			var el1 = new WebImage('https://www.badagi.ge/img/gallery/2713458705.png');
+			food.push(el1);
+			food[i].setSize(churchWidth, churchHeight);
+			food[i].setPosition(Randomizer.nextInt(0, getWidth()-churchWidth*2), 
+									Randomizer.nextInt(0, churchHeight));
+			add(food[i]);
+		}
+	}
+	
+	function draw(){
+		
+		drawFood();
+		drawTrash();
+		eat();
+		bee.move(0,3);
+		//scoreBoard();
+		if(counter % 5 ==0 && counter != 0 && beelineCounter < beelineArr.length-1){
+			
+			beeline(beelineCounter);
+			add(bee);
+			beelineCounter ++;
+			counter = 0;
+		}
+		score.setText('score: ' + counterScore+' ');
+		
+		
+	}
+	//create trash 
+	function drawTrash(){
+		for (var i = 0; i < trash.length; i++) {
+			trash[i].move(0,2);
+			//trash[i].move(0,2);
+			if(trash[i].getY() >= getHeight()){
+				trash[i].setPosition(Randomizer.nextInt(40, getWidth()-40), 
+							0);
+			}
+		}
+	}
+	//create churchkhela
+	function drawFood(){
+		for (var i = 0; i < food.length; i++) {
+			food[i].move(0,2);
+			if(food[i].getY() >= getHeight()){
+				food[i].setPosition(Randomizer.nextInt(40, getWidth()-40), 
+							0);
+			}
+		}
+	}
+	
+	function eat(){
+		zakoNorth= getElementAt(zako.getX() + zakoWidth/2, zako.getY()-1);
+		zakoSouth = getElementAt(zako.getX() + zakoWidth/2, zako.getY() + zakoHeight+1);
+		zakoWest = getElementAt(zako.getX()- 1, zako.getY() + zakoHeight/2);
+		zakoEast = getElementAt(zako.getX()+ 1 + zakoWidth, zako.getY() + zakoHeight/2);
+		
+		
+		//for churchkhelas
+		if(zakoNorth != null && zakoNorth.getType() == 'WebImage'
+			|| zakoEast != null && zakoEast.getType() == 'WebImage'
+			|| zakoWest != null && zakoWest.getType() == 'WebImage'
+			|| zakoSouth != null && zakoSouth.getType() == 'WebImage'){
+			remove(zakoNorth);
+			remove(zakoEast);
+			remove(zakoWest);
+			remove(zakoSouth);
+			
+			drawChurchkhela(counterG,counterJ);
+			 
+			counterG ++;
+			counterJ ++;
+			counter++;
+			
+			
+			for (var i = 0; i < food.length; i++) {
+			food[i].move(0,2);
+			if(food[i].getY() >= getHeight()){
+				food[i].setPosition(Randomizer.nextInt(40, getWidth()-40), 
+							0);
+			}
+		}
+			counterScore ++;
+			
+			// hasten 
+			if(counterScore %5 == 0){
+			delay -= 5;
+			hasten +=2;
+			stopTimer(draw);
+			setTimer(draw, delay);
+		}
+	}
+		
+		// for trash
+		if(zakoNorth != null && zakoNorth.getType() == 'Rectangle'
+			|| zakoEast != null && zakoEast.getType() == 'Rectangle'
+			|| zakoWest != null && zakoWest.getType() == 'Rectangle'
+			|| zakoSouth != null && zakoSouth.getType() == 'Rectangle'){
+			remove(zakoNorth);
+			remove(zakoEast);
+			remove(zakoWest);
+			remove(zakoSouth);
+			
+			stopTimer(draw);
+			gameOver();
+			
+		}
+		
+		// for beeline
+		if(zakoNorth != null && zakoNorth.getType() == 'Text'
+			|| zakoEast != null && zakoEast.getType() == 'Text'
+			|| zakoWest != null && zakoWest.getType() == 'Text'
+			|| zakoSouth != null && zakoSouth.getType() == 'Text'){
+			remove(zakoNorth);
+			remove(zakoEast);
+			remove(zakoWest);
+			remove(zakoSouth);
+			counterScore += 5;
+		}
+		
+	}
+	
+	function gameOver(){
+		lose = new Text('Game Over','70px Rubik Light');
+		lose.setPosition(getWidth()/2-lose.getWidth()/2,getHeight()/2);
+		lose.setColor(Color.red);
+		add(lose);
+	}
+	function beeline(b){
+			// trash
+			
+			bee = new  Text(beelineArr[b],'50px Arial');
+			if(beelineCounter %2 ==0){
+				
+			} else{
+				bee.setColor(Color.yellow);
+			}
+			
+			bee.setPosition(Randomizer.nextInt(0, getWidth()-bee.getWidth()), 
+									Randomizer.nextInt(0, bee.getHeight()));
+			
+		
+	}
+	
+	function scoreBoard(){
+		
+		score = new Text(' ');
+		score.setPosition(getWidth()-120, score.getHeight());
+		score.setColor(Color.blue);
+		add(score);
+		
+		
+		
+	}
+	//trash
+	function createTrash(){
+		for (var i = 0; i < 3; i++) {
+			
+			// trash
+			var el2 = new  Rectangle(10, 50);
+			trash.push(el2);
+			trash[i].setColor('#8f5b22');
+			trash[i].setPosition(Randomizer.nextInt(0, getWidth()-churchWidth*2), 
+									Randomizer.nextInt(0, churchHeight));
+			add(trash[i]);
+		}
+	}
+	
+	//create protagonist
+	function drawZako(){
+		zako = new WebImage('https://i.pinimg.com/originals/60/22/6f/60226fa3f6b30e7fbee2587c00194381.png');
+		zako.setSize(zakoWidth, zakoHeight);
+		zako.setPosition(0, getHeight()-zako.getHeight());
+		add(zako);
+	}
+	
+	//zako moves
+	function keyDown(e){
+		if(e.keyCode == Keyboard.letter('A')){ //left
+			if(zako.getX() > 0){
+				zako.move(-5-hasten, 0);
+			}
+		}
+		
+		if(e.keyCode == Keyboard.letter('D')){ //right
+			if(zako.getX() + zakoWidth < getWidth()){
+				zako.move(5+hasten, 0);
+			}
+		}
+		
+		if(e.keyCode == Keyboard.letter('W')){ //up
+			if(zako.getY() > 0){
+				zako.move(0, -5-hasten);
+			}
+		}
+		
+		if(e.keyCode == Keyboard.letter('S')){ //down
+			if(zako.getY()+ zakoHeight < getHeight()){
+				zako.move(0, 5+hasten);
+			}
+		}
+	}
+	
+	
+		if (typeof start === 'function') {
+			start();
+		}
+	};
+	</script>
+	
+	</body>
+	</html>
+	
